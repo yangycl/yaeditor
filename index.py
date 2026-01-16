@@ -41,6 +41,13 @@ def save_file():
 
 save_button.clicked.connect(save_file)
 
+if len(sys.argv) > 1:
+    file_path = sys.argv[1]
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            editor.setText(file.read())
+    except Exception as e:
+        print(f"無法開啟檔案: {e}")
 # 顯示主視窗
 window.show()
 

@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QApplication, QTextEdit, QWidget, QVBoxLayout, QPushButton, QFileDialog
+from PyQt6.QtGui import QShortcut, QKeySequence
 import sys
-
 # 建立 QApplication
 app = QApplication(sys.argv)
 
@@ -48,7 +48,8 @@ if len(sys.argv) > 1:
             editor.setText(file.read())
     except Exception as e:
         print(f"無法開啟檔案: {e}")
-# 顯示主視窗
+QShortcut(QKeySequence("Ctrl+O"), window).activated.connect(open_file)
+QShortcut(QKeySequence("Ctrl+S"), window).activated.connect(save_file)# 顯示主視窗
 window.show()
 
 # 啟動事件迴圈

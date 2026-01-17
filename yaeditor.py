@@ -44,6 +44,10 @@ def save_file():
         return
     file_path, _ = QFileDialog.getSaveFileName(window, "儲存檔案", "", "所有檔案 (*.*);;文字檔 (*.txt)")
 
+    if file_path:
+        current_file_path = file_path
+    else:
+        return
     with open(file_path, 'w', encoding='utf-8') as file:
         file.write(editor.toPlainText())
 

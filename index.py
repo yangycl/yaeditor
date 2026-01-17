@@ -4,6 +4,7 @@ import sys
 # 建立 QApplication
 app = QApplication(sys.argv)
 
+current_file_path = None
 # 建立主視窗
 window = QWidget()
 window.setWindowTitle('yaeditor')
@@ -26,6 +27,8 @@ def open_file():
     if file_path:
         with open(file_path, 'r', encoding='utf-8') as file:
             editor.setText(file.read())
+        global current_file_path
+        current_file_path = file_path
 
 open_button.clicked.connect(open_file)
 
@@ -34,10 +37,15 @@ save_button = QPushButton("儲存檔案")
 layout.addWidget(save_button)
 
 def save_file():
-    file_path, _ = QFileDialog.getSaveFileName(window, "儲存檔案", "", "所有檔案 (*.*);;文字檔 (*.txt)")
-    if file_path:
-        with open(file_path, 'w', encoding='utf-8') as file:
+    global current_file_path
+    if current_file_path:
+        with open(current_file_path, 'w', encoding='utf-8') as file:
             file.write(editor.toPlainText())
+        return
+    file_path, _ = QFileDialog.getSaveFileName(window, "儲存檔案", "", "所有檔案 (*.*);;文字檔 (*.txt)")
+
+    with open(file_path, 'w', encoding='utf-8') as file:
+        file.write(editor.toPlainText())
 
 save_button.clicked.connect(save_file)
 

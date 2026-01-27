@@ -129,11 +129,12 @@ def open_file_from_path(file_path):
 process = QProcess()
 
 def choosecode():
+    data = process.readAllStandardOutput().data()
     try:
-        return process.readAllStandardOutput().data().decode('utf-8')
+        return data.decode('utf-8')
     except UnicodeDecodeError:
-        return process.readAllStandardOutput().data().decode('big5')
-process.readyReadStandardOutput.connect(lambda: 
+        return data.decode('big5')
+process.readyReadStandardOutput.connect(lambda:
     terminal.append(choosecode()+"\n")
 )
 current_dir = os.getcwd()
@@ -145,6 +146,7 @@ def run_command():
         os.chdir(new_dir)
         global current_dir
         current_dir = os.getcwd()
+        process.setWorkingDirectory(current_dir)  # 在 start 之前設定
     # Windows: 用 cmd /c 執行任意指令
     process.start('powershell', ['-Command', cmd])
     terminal.append(current_dir + "> ")

@@ -1,7 +1,10 @@
+import os
 from PyQt6.QtWidgets import QApplication, QTextEdit, QWidget, QVBoxLayout, QPushButton, QFileDialog
 from PyQt6.QtGui import QShortcut, QKeySequence
 from PyQt6.QtWidgets import QWidget, QHBoxLayout 
 from pathlib import Path
+from PyQt6.QtCore import QProcess
+from PyQt6.QtCore import Qt
 
 import sys
 # 建立 QApplication
@@ -26,6 +29,10 @@ layout.addWidget(left_bar, stretch=1)
 # 建立 QTextEdit（最大）
 editor = QTextEdit()
 left_layout.addWidget(editor, stretch=1)
+
+#終端機 Qprocess 
+terminal = QTextEdit()
+left_layout.addWidget(terminal, stretch=1)
 
 # 下方按鈕
 #開啟檔案按鈕
@@ -117,6 +124,48 @@ def open_file_from_path(file_path):
     except Exception as e:
         print(f"無法開啟檔案: {e}")
 
+#終端機函式
+
+process = QProcess()
+
+def choosecode():
+    try:
+        return process.readAllStandardOutput().data().decode('utf-8')
+    except UnicodeDecodeError:
+        return process.readAllStandardOutput().data().decode('big5')
+process.readyReadStandardOutput.connect(lambda: 
+    terminal.append(choosecode()+"\n")
+)
+current_dir = os.getcwd()
+def run_command():  
+    cmd = terminal.toPlainText().splitlines()[-1]
+    if cmd.split(" ")[0] == "cd":
+        # 切換目錄
+        new_dir = cmd.split(" ")[1]
+        os.chdir(new_dir)
+        global current_dir
+        current_dir = os.getcwd()
+    # Windows: 用 cmd /c 執行任意指令
+    process.start('powershell', ['-Command', cmd])
+    terminal.append(current_dir + "> ")
+# 攔截 terminal 的 keyPressEvent 以偵測 Shift+Enter
+original_keypress = terminal.keyPressEvent
+
+def custom_keypress(event):
+    if event.key() == Qt.Key.Key_Return and \
+       event.modifiers() == Qt.KeyboardModifier.ShiftModifier:
+        run_command()
+    else:
+        original_keypress(event)
+
+terminal.keyPressEvent = custom_keypress
+# 監聽 Shift+Enter 快捷鍵執行命令
+# 設定 context 為 ApplicationShortcut (最高優先級)
+shortcut = QShortcut(QKeySequence("Shift+Return"), window)
+shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)  # ← 強制!
+shortcut.activated.connect(run_command)
+
+
 open_folder_button.clicked.connect(open_folder)# 如果有提供檔案路徑參數，則自動開啟該檔案
 if len(sys.argv) > 1:
     file_path = sys.argv[1]
@@ -127,6 +176,8 @@ if len(sys.argv) > 1:
         print(f"無法開啟檔案: {e}")
 QShortcut(QKeySequence("Ctrl+O"), window).activated.connect(open_file)
 QShortcut(QKeySequence("Ctrl+S"), window).activated.connect(save_file)# 顯示主視窗
+
+
 window.show()
 
 # 啟動事件迴圈
